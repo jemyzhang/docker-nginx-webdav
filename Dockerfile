@@ -25,7 +25,7 @@ RUN apk add --no-cache --virtual .build-deps \
   geoip-dev
 
 # Reuse same cli arguments as the nginx:alpine image used to build
-RUN CONFARGS=$(nginx -V 2>&1 | sed -n -e 's/^.*arguments: //p;s/-g//') && \
+RUN CONFARGS=$(nginx -V 2>&1 | sed -n -e 's/^.*arguments: //p') && \
   CONFARGS=${CONFARGS/-Os -fomit-frame-pointer/-Os} && \
   mkdir /usr/src && \
   tar -zxC /usr/src -f nginx.tar.gz && \
@@ -36,7 +36,7 @@ RUN CONFARGS=$(nginx -V 2>&1 | sed -n -e 's/^.*arguments: //p;s/-g//') && \
   DAV_EXT_DIR="$(pwd)/nginx-dav-ext-module" && \
   HEADERS_MORE_DIR="$(pwd)/headers-more-nginx-module" && \
   cd /usr/src/nginx-$NGINX_VERSION && \
-  ./configure --with-compat --with-http_dav_module $CONFARGS --add-module=$HEADERS_MORE_DIR --add-module=$DAV_EXT_DIR && \
+  ./configure --with-compat --with-http_dav_module "$CONFARGS" --add-module=$HEADERS_MORE_DIR --add-module=$DAV_EXT_DIR && \
   make && make install
 
 FROM nginx:alpine
