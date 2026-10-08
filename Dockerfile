@@ -1,11 +1,11 @@
-FROM nginx:alpine AS builder
+FROM nginx:1.31.6-alpine AS builder
 
-ENV NGINX_VERSION=1.21.0
-ENV HEADERS_MORE_VERSION=v0.33
+ENV NGINX_VERSION=1.31.6
+ENV HEADERS_MORE_VERSION=v0.40
 ENV DAV_EXT_VERSION=v3.0.0
 
 # Download sources
-RUN wget "http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" -O nginx.tar.gz && \
+RUN wget "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" -O nginx.tar.gz && \
   wget "https://github.com/openresty/headers-more-nginx-module/archive/${HEADERS_MORE_VERSION}.tar.gz" -O headers-more-nginx-module.tar.gz && \
   wget "https://github.com/arut/nginx-dav-ext-module/archive/${DAV_EXT_VERSION}.tar.gz" -O nginx-dav-ext-module.tar.gz
 
@@ -39,10 +39,8 @@ RUN CONFARGS=$(nginx -V 2>&1 | sed -n -e 's/^.*arguments: //p' | sed 's/--with-c
   ./configure --with-compat --with-http_dav_module $CONFARGS --add-module=$HEADERS_MORE_DIR --add-module=$DAV_EXT_DIR && \
   make && make install
 
-FROM nginx:alpine
+FROM nginx:1.31.6-alpine
 LABEL maintainer="Jemy Zhang<jemy.zhang@gmail.com>"
-ARG nginx_version
-ENV NGINX_VERSION=$nginx_version
 COPY --from=builder /etc/nginx /etc/nginx
 COPY --from=builder /usr/lib/nginx /usr/lib/nginx
 COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
