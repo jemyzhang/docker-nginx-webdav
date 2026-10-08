@@ -10,12 +10,15 @@ RUN wget "https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz" -O nginx.tar
   wget "https://github.com/arut/nginx-dav-ext-module/archive/${DAV_EXT_VERSION}.tar.gz" -O nginx-dav-ext-module.tar.gz
 
 # For latest build deps, see https://github.com/nginxinc/docker-nginx/blob/master/mainline/alpine/Dockerfile
+# NOTE: pcre2-dev (not pcre-dev): the official nginx:alpine image links PCRE2,
+# so the custom build must too, otherwise the binary looks for libpcre.so.1
+# at runtime and fails to start.
 RUN apk add --no-cache --virtual .build-deps \
   gcc \
   libc-dev \
   make \
   openssl-dev \
-  pcre-dev \
+  pcre2-dev \
   zlib-dev \
   linux-headers \
   curl \
@@ -41,6 +44,9 @@ RUN CONFARGS=$(nginx -V 2>&1 | sed -n -e 's/^.*arguments: //p' | sed 's/--with-c
 
 FROM nginx:1.31.6-alpine
 LABEL maintainer="Jemy Zhang<jemy.zhang@gmail.com>"
+# libxml2: linked by the custom nginx binary (nginx-dav-ext-module parses
+# PROPFIND XML with it); harmless no-op if the base image already ships it.
+RUN apk add --no-cache libxml2
 COPY --from=builder /etc/nginx /etc/nginx
 COPY --from=builder /usr/lib/nginx /usr/lib/nginx
 COPY --from=builder /usr/sbin/nginx /usr/sbin/nginx
